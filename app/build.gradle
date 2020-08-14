@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
 
 android {
     compileSdkVersion 29
@@ -12,9 +14,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-    buildFeatures{
-        compose true
-    }
+
 
     buildTypes {
         release {
@@ -40,6 +40,8 @@ dependencies {
 
 
 
+    implementation 'com.google.firebase:firebase-ml-vision:24.1.0'
+
     implementation 'com.google.android.gms:play-services-mlkit-text-recognition:16.1.0'
     //CAMERA X Libs
     def camerax_version = "1.0.0-beta07"
@@ -49,5 +51,10 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:$camerax_version"
     // CameraX View class
     implementation "androidx.camera:camera-view:1.0.0-alpha14"
+    implementation "androidx.core:core-ktx:+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
+}
+repositories {
+    mavenCentral()
 }
