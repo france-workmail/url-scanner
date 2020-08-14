@@ -18,6 +18,13 @@
             android:layout_height="match_parent"
             android:id="@+id/pvCameraPreview"/>
 
+        <View
+            android:id="@+id/rectangleView"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:background="@drawable/rectangle"/>
+
         <TextView
             android:id="@+id/tvAnalysisTime"
             android:layout_width="match_parent"

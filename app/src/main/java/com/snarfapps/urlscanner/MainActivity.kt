@@ -2,6 +2,7 @@ package com.snarfapps.urlscanner
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.media.Image
 import android.net.Uri
 import android.os.Bundle
@@ -20,6 +21,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.BitmapCompat
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
@@ -47,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     var cameraPreview: PreviewView? = null
     var urlButton: Button?=null
     var tvAnalysisTime: TextView?=null
+    var rectangleView: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +70,8 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
+
+        rectangleView = findViewById(R.id.rectangleView)
 
         if(checkAllPermissions()){
             startCamera()
@@ -170,8 +175,7 @@ class MainActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
-                        this, cameraSelector, preview)
-                cameraProvider.bindToLifecycle(this,cameraSelector,imageAnalyzer)
+                        this, cameraSelector, preview,imageAnalyzer)
 
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -238,6 +242,8 @@ class MainActivity : AppCompatActivity() {
             val pixels = data.map { it.toInt() and 0xFF }
             val luma = pixels.average()
 
+
+            
 
 
 
