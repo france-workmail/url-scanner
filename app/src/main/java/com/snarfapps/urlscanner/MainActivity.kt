@@ -9,6 +9,7 @@ import android.util.Log
 import android.util.Patterns
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -24,12 +25,14 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import java.io.File
 import java.nio.ByteBuffer
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.collections.ArrayList
 
 
 /** Helper type alias used for analysis use case callbacks */
-typealias LumaListener = (luma: ImageProxy?) -> Unit
+typealias LumaListener = (luma: ImageProxy?,timeProcessed: Double) -> Unit
 class MainActivity : AppCompatActivity() {
     companion object{
         private val CAMERA_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA )
@@ -43,14 +46,17 @@ class MainActivity : AppCompatActivity() {
 
     var cameraPreview: PreviewView? = null
     var urlButton: Button?=null
+    var tvAnalysisTime: TextView?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         cameraPreview = findViewById(R.id.pvCameraPreview)
 
-        urlButton = findViewById(R.id.scannedURL)
+        tvAnalysisTime = findViewById(R.id.tvAnalysisTime)
 
+
+        urlButton = findViewById(R.id.scannedURL)
         urlButton!!.setOnClickListener(object : View.OnClickListener {
             override fun onClick(view: View?) {
                 Log.e(TAG, "CLICK!")
@@ -116,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             val imageAnalyzer = ImageAnalysis.Builder()
                     .build()
                     .also {
-                        it.setAnalyzer(cameraExecutor, URLScannAnalyzer { luma ->
+                        it.setAnalyzer(cameraExecutor, URLScannAnalyzer { luma: ImageProxy?, analysisTime: Double ->
 
 
 
@@ -136,6 +142,7 @@ class MainActivity : AppCompatActivity() {
                                             if(Patterns.WEB_URL.matcher(block.text).matches()){
                                                 Log.e(TAG,"Found url: ${block.text}")
                                                 urlButton!!.text = block.text
+                                                tvAnalysisTime!!.text = "%.${2}f".format(analysisTime, Locale.ENGLISH)+" s"
                                             }
                                         }
 
@@ -212,10 +219,17 @@ class MainActivity : AppCompatActivity() {
             framesPerSecond = 1.0 / ((timestampFirst - timestampLast) /
                     frameTimestamps.size.coerceAtLeast(1).toDouble()) * 1000.0
 
+
+            //so we get fps, now we calculate how much time it would take for a frame to be processed
+            val secondsOfEachFrame = 1.0 / framesPerSecond
+
             // Analysis could take an arbitrarily long amount of time
             // Since we are running in a different thread, it won't stall other use cases
 
             lastAnalyzedTimestamp = frameTimestamps.first()
+
+
+
 
 
 
@@ -227,7 +241,8 @@ class MainActivity : AppCompatActivity() {
 
 
 
-            listener(imageProxy)
+            Log.e(TAG,"$framesPerSecond")
+            listener(imageProxy,secondsOfEachFrame * -1)
 
         }
 

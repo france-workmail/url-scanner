@@ -9,11 +9,24 @@
     tools:context=".MainActivity">
 
 
-    <androidx.camera.view.PreviewView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:id="@+id/pvCameraPreview"/>
+        android:layout_weight="1">
+        <androidx.camera.view.PreviewView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/pvCameraPreview"/>
+
+        <TextView
+            android:id="@+id/tvAnalysisTime"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom"
+            android:gravity="center"
+            android:textColor="#fff"
+            android:text="FPS"/>
+    </FrameLayout>
 
 
     <Button
