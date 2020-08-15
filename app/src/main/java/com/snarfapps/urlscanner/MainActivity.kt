@@ -10,6 +10,7 @@ import android.util.Log
 import android.util.Patterns
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.URLUtil
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
@@ -168,7 +169,7 @@ class MainActivity : AppCompatActivity() {
 
                                         for(block in visionText.textBlocks){
 
-                                            if(Patterns.WEB_URL.matcher(block.text).matches()){
+                                            if( URLUtil.isValidUrl(block.text) &&  Patterns.WEB_URL.matcher(block.text).matches()){
                                                 Log.e(TAG,"Found url: ${block.text}")
                                                 urlButton!!.text = block.text
                                                 tvAnalysisTime!!.text = "%.${2}f".format(analysisTime, Locale.ENGLISH)+" s"
