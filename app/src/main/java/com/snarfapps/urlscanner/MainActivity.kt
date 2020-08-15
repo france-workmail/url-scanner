@@ -156,7 +156,6 @@ class MainActivity : AppCompatActivity() {
                             updateScannerView(luma)
 
 
-                            
 
                             val mediaImage: Image? = luma?.image
                             val image = InputImage.fromMediaImage(mediaImage!!, luma!!.getImageInfo().getRotationDegrees())
@@ -169,12 +168,12 @@ class MainActivity : AppCompatActivity() {
 
                                         for(block in visionText.textBlocks){
 
-                                            //if(Patterns.WEB_URL.matcher(block.text).matches()){
+                                            if(Patterns.WEB_URL.matcher(block.text).matches()){
                                                 Log.e(TAG,"Found url: ${block.text}")
                                                 urlButton!!.text = block.text
                                                 tvAnalysisTime!!.text = "%.${2}f".format(analysisTime, Locale.ENGLISH)+" s"
-                                            break
-                                            //}
+                                                break
+                                            }
                                         }
 
                                         luma.close()
