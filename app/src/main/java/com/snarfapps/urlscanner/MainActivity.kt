@@ -35,7 +35,7 @@ import kotlin.collections.ArrayList
 
 
 /** Helper type alias used for analysis use case callbacks */
-typealias LumaListener = (luma: ImageProxy?,timeProcessed: Double) -> Unit
+typealias ImageAnalysisListener = (imageProxy: ImageProxy?,timeProcessed: Double) -> Unit
 class MainActivity : AppCompatActivity() {
     companion object{
         private val CAMERA_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA )
@@ -153,13 +153,18 @@ class MainActivity : AppCompatActivity() {
             val imageAnalyzer = ImageAnalysis.Builder()
                     .build()
                     .also {
-                        it.setAnalyzer(cameraExecutor, URLScannAnalyzer { luma: ImageProxy?, analysisTime: Double ->
-                            updateScannerView(luma)
+                        it.setAnalyzer(cameraExecutor, URLScannAnalyzer { imageProxy: ImageProxy?, analysisTime: Double ->
+                            updateScannerView(imageProxy)
+
+                            var rect = Rect(500, 3000,300,100)
+
+                            imageProxy!!.setCropRect(rect)
+
+                            //TODO continue with the crop part!
 
 
-
-                            val mediaImage: Image? = luma?.image
-                            val image = InputImage.fromMediaImage(mediaImage!!, luma!!.getImageInfo().getRotationDegrees())
+                            val mediaImage: Image? = imageProxy?.image
+                            val image = InputImage.fromMediaImage(mediaImage!!, imageProxy!!.getImageInfo().getRotationDegrees())
 
 
                             val recognizer: TextRecognizer = TextRecognition.getClient()
@@ -177,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                                             }
                                         }
 
-                                        luma.close()
+                                        imageProxy.close()
                                     }
                                     .addOnFailureListener { e ->
                                         Log.e(TAG,"Failed: ${e.message}")
@@ -212,7 +217,7 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private class URLScannAnalyzer(private val listener: LumaListener) : ImageAnalysis.Analyzer {
+    private class URLScannAnalyzer(private val listener: ImageAnalysisListener) : ImageAnalysis.Analyzer {
 
 
         private val frameRateWindow = 8
@@ -221,7 +226,7 @@ class MainActivity : AppCompatActivity() {
         var framesPerSecond: Double = -1.0
 
 
-        private val listeners = ArrayList<LumaListener>().apply { listener?.let { add(it) } }
+        private val listeners = ArrayList<ImageAnalysisListener>().apply { listener?.let { add(it) } }
 
         private fun ByteBuffer.toByteArray(): ByteArray {
             rewind()    // Rewind the buffer to zero
@@ -237,8 +242,6 @@ class MainActivity : AppCompatActivity() {
                 imageProxy.close()
                 return
             }
-
-
 
             // Keep track of frames analyzed
             val currentTime = System.currentTimeMillis()
@@ -259,23 +262,6 @@ class MainActivity : AppCompatActivity() {
             // Since we are running in a different thread, it won't stall other use cases
 
             lastAnalyzedTimestamp = frameTimestamps.first()
-
-
-
-
-
-
-            val buffer = imageProxy.planes[0].buffer
-            val data = buffer.toByteArray()
-            val pixels = data.map { it.toInt() and 0xFF }
-            val luma = pixels.average()
-
-
-
-
-
-
-
 
 
 
