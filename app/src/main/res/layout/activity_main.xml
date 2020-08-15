@@ -25,6 +25,15 @@
             android:layout_gravity="center"
             android:background="@drawable/rectangle"/>
 
+        <ImageButton
+            android:id="@+id/ivFlash"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:scaleType="fitCenter"
+            android:background="@android:color/transparent"
+            android:src="@android:drawable/ic_lock_idle_low_battery"
+            />
+
         <TextView
             android:id="@+id/tvAnalysisTime"
             android:layout_width="match_parent"

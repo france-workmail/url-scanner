@@ -2,26 +2,26 @@ package com.snarfapps.urlscanner
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
+import android.graphics.Rect
 import android.media.Image
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.BitmapCompat
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.LiveData
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
@@ -50,7 +50,8 @@ class MainActivity : AppCompatActivity() {
     var urlButton: Button?=null
     var tvAnalysisTime: TextView?=null
     var rectangleView: View? = null
-
+    var ivFlash : ImageButton? = null
+    var flashOn = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -73,6 +74,14 @@ class MainActivity : AppCompatActivity() {
 
         rectangleView = findViewById(R.id.rectangleView)
 
+        ivFlash = findViewById(R.id.ivFlash)
+
+        ivFlash!!.setOnClickListener {
+            cameraControl?.enableTorch(!flashOn)
+            flashOn=!flashOn
+
+        }
+
         if(checkAllPermissions()){
             startCamera()
         }else{
@@ -84,6 +93,10 @@ class MainActivity : AppCompatActivity() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
+
+
+
+
 
     fun checkAllPermissions() = CAMERA_PERMISSIONS.all {
         return ContextCompat.checkSelfPermission(baseContext,it) == PackageManager.PERMISSION_GRANTED
@@ -110,6 +123,15 @@ class MainActivity : AppCompatActivity() {
             mediaDir else filesDir
     }
 
+    fun updateScannerView( proxy:ImageProxy?){
+
+        runOnUiThread {
+        }
+
+
+
+    }
+    var cameraControl : CameraControl? = null
     fun startCamera(){
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -118,8 +140,11 @@ class MainActivity : AppCompatActivity() {
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
             // Preview
-            val preview = Preview.Builder()
+           val preview = Preview.Builder()
+
+
                     .build()
+
                     .also {
                         it.setSurfaceProvider(cameraPreview?.createSurfaceProvider())
                     }
@@ -128,8 +153,10 @@ class MainActivity : AppCompatActivity() {
                     .build()
                     .also {
                         it.setAnalyzer(cameraExecutor, URLScannAnalyzer { luma: ImageProxy?, analysisTime: Double ->
+                            updateScannerView(luma)
 
 
+                            
 
                             val mediaImage: Image? = luma?.image
                             val image = InputImage.fromMediaImage(mediaImage!!, luma!!.getImageInfo().getRotationDegrees())
@@ -139,24 +166,20 @@ class MainActivity : AppCompatActivity() {
 
                             val result = recognizer.process(image!!)
                                     .addOnSuccessListener { visionText ->
-                                        // Task completed successfully
-                                        // ...
 
                                         for(block in visionText.textBlocks){
 
-                                            if(Patterns.WEB_URL.matcher(block.text).matches()){
+                                            //if(Patterns.WEB_URL.matcher(block.text).matches()){
                                                 Log.e(TAG,"Found url: ${block.text}")
                                                 urlButton!!.text = block.text
                                                 tvAnalysisTime!!.text = "%.${2}f".format(analysisTime, Locale.ENGLISH)+" s"
-                                            }
+                                            break
+                                            //}
                                         }
 
                                         luma.close()
                                     }
                                     .addOnFailureListener { e ->
-                                        // Task failed with an exception
-                                        // ...
-
                                         Log.e(TAG,"Failed: ${e.message}")
                                         throw e
                                     }
@@ -166,6 +189,7 @@ class MainActivity : AppCompatActivity() {
                         })
                     }
 
+
             // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -174,8 +198,12 @@ class MainActivity : AppCompatActivity() {
                 cameraProvider.unbindAll()
 
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
+               val camera = cameraProvider.bindToLifecycle(
                         this, cameraSelector, preview,imageAnalyzer)
+
+
+
+                cameraControl = camera.cameraControl
 
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -243,7 +271,11 @@ class MainActivity : AppCompatActivity() {
             val luma = pixels.average()
 
 
-            
+
+
+
+
+
 
 
 
@@ -254,3 +286,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 }
+
+private fun ByteBuffer.toByteArray(): ByteArray? {
+    rewind()    // Rewind the buffer to zero
+    val data = ByteArray(remaining())
+    get(data)   // Copy the buffer into a byte array
+    return data // Return the byte array
+}
+
